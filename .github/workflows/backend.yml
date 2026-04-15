@@ -7,36 +7,21 @@ on:
     paths:
       - 'backend/**'
       - '.github/workflows/**'
-    inputs:
-      environment:
-        description: Environment to deploy to
-        required: true
-        default: development
-        type: choice
-        options:
-          - development
-          - staging
-          - production
-      region:
-        description: GCP region for deployment
-        required: true
-        default: asia-south1
-        type: string
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   deploy-backend:
     uses: ./.github/workflows/_reusable-deploy.yml
     with:
       deployment_type: backend
-      environment: ${{ inputs.environment }}
-      app_path: backend
+      environment: development   
+      app_path: ./backend
       app_name: backend-app
       artifact_name: backend-build
-      region: ${{ inputs.region }}
+      region: asia-south1
+
     secrets:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
