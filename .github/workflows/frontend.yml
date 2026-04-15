@@ -1,7 +1,12 @@
 name: Deploy Frontend
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/**'
     inputs:
       environment:
         description: Environment to deploy to

@@ -1,7 +1,12 @@
 name: Deploy Backend
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/**'
     inputs:
       environment:
         description: Environment to deploy to
