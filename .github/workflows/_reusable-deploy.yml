@@ -1,4 +1,3 @@
-
 name: Reusable Deploy Workflow
 
 on:
@@ -40,6 +39,7 @@ concurrency:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  ARTIFACT_REPO: backend-repo
 
 jobs:
   validate:
@@ -56,6 +56,7 @@ jobs:
             echo "Invalid deployment type"
             exit 1
           fi
+
       - name: Validate app path
         run: |
           if [ ! -d "${{ inputs.app_path }}" ]; then
@@ -159,15 +160,16 @@ jobs:
           gcloud storage buckets update gs://${{ secrets.GCS_BUCKET_NAME }} \
             --web-main-page-suffix=index.html \
             --web-error-page=404.html
+
           gcloud storage buckets add-iam-policy-binding gs://${{ secrets.GCS_BUCKET_NAME }} \
             --member=allUsers \
             --role=roles/storage.objectViewer
       
-      - name: Set up Docker for GCR
+      - name: Set up Docker for Artifact Registry
         if: inputs.deployment_type == 'backend'
         uses: docker/login-action@v3
         with:
-          registry: gcr.io
+          registry: asia-south1-docker.pkg.dev
           username: _json_key
           password: ${{ secrets.GCP_CREDENTIALS }}
       
@@ -176,7 +178,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ${{ inputs.app_path }}
-          tags: gcr.io/$PROJECT_ID/${{ inputs.app_name }}:${{ github.sha }}
+          tags: asia-south1-docker.pkg.dev/$PROJECT_ID/$ARTIFACT_REPO/${{ inputs.app_name }}:${{ github.sha }}
           push: true
       
       - name: Deploy to Cloud Run
@@ -184,7 +186,7 @@ jobs:
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: ${{ inputs.app_name }}
-          image: gcr.io/$PROJECT_ID/${{ inputs.app_name }}:${{ github.sha }}
+          image: asia-south1-docker.pkg.dev/$PROJECT_ID/$ARTIFACT_REPO/${{ inputs.app_name }}:${{ github.sha }}
           region: ${{ inputs.region }}
           platform: managed
           allow-unauthenticated: true
