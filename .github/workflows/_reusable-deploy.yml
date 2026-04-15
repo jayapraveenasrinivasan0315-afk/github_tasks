@@ -24,14 +24,19 @@ on:
     secrets:
       GCP_PROJECT_ID:
         required: false
-      GCP_CREDENTIALS:
-        required: false
+      # GCP_CREDENTIALS:
+      #   required: false
       GCS_BUCKET_NAME:
         required: false
+      #added for task2
+      GCP_SERVICE_ACCOUNT:
+        required: true
+      WORKLOAD_IDENTITY_PROVIDER:
+        required: true
 
 permissions:
   contents: read
-  id-token: none
+  id-token: write #change into write for task2
 
 concurrency:
   group: deploy-${{ inputs.app_name }}-${{ inputs.environment }}
@@ -41,15 +46,14 @@ env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   ARTIFACT_REPO: backend-repo
 
+
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          token: ${{ secrets.GITHUB_TOKEN }}
-      
+      - name: Checkout code
+        uses: actions/checkout@v4
+    
       - name: Validate deployment type
         run: |
           if [ "${{ inputs.deployment_type }}" != "frontend" ] && [ "${{ inputs.deployment_type }}" != "backend" ]; then
@@ -68,11 +72,9 @@ jobs:
     needs: validate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          token: ${{ secrets.GITHUB_TOKEN }}
-      
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Setup Node
         if: inputs.deployment_type == 'frontend'
         uses: actions/setup-node@v4
@@ -123,11 +125,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          token: ${{ secrets.GITHUB_TOKEN }}
-      
+      - name: Checkout code
+        uses: actions/checkout@v4
+    
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -141,8 +141,11 @@ jobs:
       
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
+        # with:
+        #   credentials_json: ${{ secrets.GCP_CREDENTIALS }}
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}                   #added for task2
       
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
@@ -165,13 +168,21 @@ jobs:
             --member=allUsers \
             --role=roles/storage.objectViewer
       
-      - name: Set up Docker for Artifact Registry
+      # - name: Set up Docker for Artifact Registry
+      #   if: inputs.deployment_type == 'backend'
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: asia-south1-docker.pkg.dev
+      #     # username: _json_key
+      #     # password: ${{ secrets.GCP_CREDENTIALS }}
+
+
+      #added for task2 set up docker for artifact registry
+      - name: Authenticate Docker to Artifact Registry (WIF)
         if: inputs.deployment_type == 'backend'
-        uses: docker/login-action@v3
-        with:
-          registry: asia-south1-docker.pkg.dev
-          username: _json_key
-          password: ${{ secrets.GCP_CREDENTIALS }}
+        run: |
+          gcloud auth configure-docker asia-south1-docker.pkg.dev
+          
       
       - name: Build & Push Docker image
         if: inputs.deployment_type == 'backend'
