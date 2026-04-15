@@ -1,6 +1,0 @@
-[submodule "backend"]
-	path = backend
-	url = https://github.com/jayapraveenasrinivasan0315-afk/backend
-[submodule "frontend"]
-	path = frontend
-	url = https://github.com/jayapraveenasrinivasan0315-afk/frontend
