@@ -1,0 +1,38 @@
+name: Deploy Frontend
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to deploy to
+        required: true
+        default: development
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+      region:
+        description: GCP region for deployment
+        required: true
+        default: asia-south1
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy-frontend:
+    uses: ./.github/workflows/_reusable-deploy.yml
+    with:
+      deployment_type: frontend
+      environment: ${{ inputs.environment }}
+      app_path: frontend
+      app_name: frontend-app
+      artifact_name: frontend-build
+      region: ${{ inputs.region }}
+    secrets:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCS_BUCKET_NAME: ${{ secrets.GCS_BUCKET_NAME }}
+      GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}

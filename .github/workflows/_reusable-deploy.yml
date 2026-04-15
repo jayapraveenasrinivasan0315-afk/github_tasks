@@ -1,0 +1,190 @@
+
+name: Reusable Deploy Workflow
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        default: development
+        type: string
+      deployment_type:
+        required: true
+        type: string
+      app_path:
+        required: true
+        type: string
+      app_name:
+        required: true
+        type: string
+      artifact_name:
+        required: true
+        type: string
+      region:
+        default: asia-south1
+        type: string
+    secrets:
+      GCP_PROJECT_ID:
+        required: false
+      GCP_CREDENTIALS:
+        required: false
+      GCS_BUCKET_NAME:
+        required: false
+
+permissions:
+  contents: read
+  id-token: none
+
+concurrency:
+  group: deploy-${{ inputs.app_name }}-${{ inputs.environment }}
+  cancel-in-progress: true
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Validate deployment type
+        run: |
+          if [ "${{ inputs.deployment_type }}" != "frontend" ] && [ "${{ inputs.deployment_type }}" != "backend" ]; then
+            echo "Invalid deployment type"
+            exit 1
+          fi
+      - name: Validate app path
+        run: |
+          if [ ! -d "${{ inputs.app_path }}" ]; then
+            echo "App path not found"
+            exit 1
+          fi
+
+  build:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Node
+        if: inputs.deployment_type == 'frontend'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Install frontend dependencies
+        if: inputs.deployment_type == 'frontend'
+        working-directory: ${{ inputs.app_path }}
+        run: npm ci
+      
+      - name: Build frontend
+        if: inputs.deployment_type == 'frontend'
+        working-directory: ${{ inputs.app_path }}
+        run: npm run build
+      
+      - name: Upload frontend build artifact
+        if: inputs.deployment_type == 'frontend'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: ${{ inputs.app_path }}/dist
+          retention-days: 1
+      
+      - name: Set up Docker Buildx
+        if: inputs.deployment_type == 'backend'
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build and export backend Docker image
+        if: inputs.deployment_type == 'backend'
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ inputs.app_path }}
+          tags: |
+            ${{ inputs.app_name }}:${{ github.sha }}
+            ${{ inputs.app_name }}:latest
+          outputs: type=docker,dest=/tmp/${{ inputs.app_name }}.tar
+      
+      - name: Upload backend build artifact
+        if: inputs.deployment_type == 'backend'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: /tmp/${{ inputs.app_name }}.tar
+          retention-days: 1
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: ./build-output
+      
+      - name: Load Docker image
+        if: inputs.deployment_type == 'backend'
+        run: |
+          docker load --input ./build-output/${{ inputs.app_name }}.tar
+      
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
+      - name: Deploy frontend to Google Cloud Storage
+        if: inputs.deployment_type == 'frontend'
+        uses: google-github-actions/deploy-gcs@v2
+        with:
+          buckets: ${{ secrets.GCS_BUCKET_NAME }}
+          path: ./build-output/dist
+      
+      - name: Configure GCS bucket for static website
+        if: inputs.deployment_type == 'frontend'
+        run: |
+          gcloud storage buckets update gs://${{ secrets.GCS_BUCKET_NAME }} \
+            --web-main-page-suffix=index.html \
+            --web-error-page=404.html
+          gcloud storage buckets add-iam-policy-binding gs://${{ secrets.GCS_BUCKET_NAME }} \
+            --member=allUsers \
+            --role=roles/storage.objectViewer
+      
+      - name: Set up Docker for GCR
+        if: inputs.deployment_type == 'backend'
+        uses: docker/login-action@v3
+        with:
+          registry: gcr.io
+          username: _json_key
+          password: ${{ secrets.GCP_CREDENTIALS }}
+      
+      - name: Build & Push Docker image
+        if: inputs.deployment_type == 'backend'
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ inputs.app_path }}
+          tags: gcr.io/$PROJECT_ID/${{ inputs.app_name }}:${{ github.sha }}
+          push: true
+      
+      - name: Deploy to Cloud Run
+        if: inputs.deployment_type == 'backend'
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ inputs.app_name }}
+          image: gcr.io/$PROJECT_ID/${{ inputs.app_name }}:${{ github.sha }}
+          region: ${{ inputs.region }}
+          platform: managed
+          allow-unauthenticated: true
