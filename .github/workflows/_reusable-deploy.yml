@@ -30,9 +30,9 @@ on:
         required: false
       #added for task2
       GCP_SERVICE_ACCOUNT:
-        required: true
+        required: false
       WORKLOAD_IDENTITY_PROVIDER:
-        required: true
+        required: false
 
 permissions:
   contents: read
