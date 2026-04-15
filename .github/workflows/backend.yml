@@ -1,14 +1,14 @@
 name: Deploy Backend
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'backend/**'
-      - '.github/workflows/backend.yml'
-      - '.github/workflows/_reusable-deploy.yml'
-
+  # push:
+  #   branches:
+  #     - masters
+  #   paths:
+  #     - 'backend/**'
+  #     - '.github/workflows/backend.yml'
+  #     - '.github/workflows/_reusable-deploy.yml'
+  workflow_dispatch:
 permissions:
   contents: read
 

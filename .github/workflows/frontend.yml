@@ -1,13 +1,15 @@
 name: Deploy Frontend
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'frontend/**'
-      - '.github/workflows/frontend.yml'
-      - '.github/workflows/_reusable-deploy.yml'
+  # push:
+  #   branches:
+  #     - master
+  #   paths:
+  #     - 'frontend/**'
+  #     - '.github/workflows/frontend.yml'
+  #     - '.github/workflows/_reusable-deploy.yml'
+#task3
+  workflow_dispatch:
 permissions:
   contents: read
 
