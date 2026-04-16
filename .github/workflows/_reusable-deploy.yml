@@ -82,11 +82,10 @@ jobs:
 
       # SAST
       - name: Run Semgrep
-        uses: returntocorp/semgrep@v1
-        with:
-          config: p/default
-          generateSarif: "1"
-          continue-on-error: true
+        run: |
+          pip install semgrep
+          semgrep scan --config=p/default --sarif --output=semgrep.sarif
+        continue-on-error: true
 
       - name: Upload Semgrep SARIF
         if: always()
