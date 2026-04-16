@@ -28,11 +28,8 @@ on:
     secrets:
       GCP_PROJECT_ID:
         required: true
-      # GCP_CREDENTIALS:
-      #   required: false
       GCS_BUCKET_NAME:
         required: true
-      #added for task2
       GCP_SERVICE_ACCOUNT:
         required: true
       WORKLOAD_IDENTITY_PROVIDER:
@@ -40,7 +37,7 @@ on:
 
 permissions:
   contents: read
-  id-token: write #change into write for task2
+  id-token: write
 
 concurrency:
   group: deploy-${{ inputs.app_name }}-${{ inputs.environment }}
@@ -48,8 +45,6 @@ concurrency:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  
-
 
 jobs:
   validate:
@@ -57,10 +52,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      # - name: sast scan
-      #   run: |
-      #     semgrep --config=auto .
-    
+
       - name: Validate deployment type
         run: |
           if [ "${{ inputs.deployment_type }}" != "frontend" ] && [ "${{ inputs.deployment_type }}" != "backend" ]; then
@@ -87,20 +79,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      
+
       - name: Install frontend dependencies
         if: inputs.deployment_type == 'frontend'
         working-directory: ${{ inputs.app_path }}
         run: npm ci
-      # - name: Run security scan
-      #   if: inputs.deployment_type == 'frontend'
-      #   working-directory: ${{ inputs.app_path }}
-      #   run: npm audit                                            #task5(dependency check)
+
       - name: Build frontend
         if: inputs.deployment_type == 'frontend'
         working-directory: ${{ inputs.app_path }}
         run: npm run build
-      
+
       - name: Upload frontend build artifact
         if: inputs.deployment_type == 'frontend'
         uses: actions/upload-artifact@v4
@@ -108,11 +97,11 @@ jobs:
           name: ${{ inputs.artifact_name }}
           path: ${{ inputs.app_path }}/dist
           retention-days: 1
-      
+
       - name: Set up Docker Buildx
         if: inputs.deployment_type == 'backend'
         uses: docker/setup-buildx-action@v3
-      
+
       - name: Build and export backend Docker image
         if: inputs.deployment_type == 'backend'
         uses: docker/build-push-action@v5
@@ -122,16 +111,7 @@ jobs:
             ${{ inputs.app_name }}:${{ github.sha }}
             ${{ inputs.app_name }}:latest
           outputs: type=docker,dest=/tmp/${{ inputs.app_name }}.tar
-      # - name: trivy scan
-      #   if: inputs.deployment_type == 'backend'
-      #   uses: aquasecurity/trivy-action@master
-      #   with:
-      #     image-ref: ${{ inputs.app_name }}:${{ github.sha }}
-      #     format: table
-      #     exit-code: 1
-      #     ignore-unfixed: true
-      #     severity: CRITICAL                                        #task5(docker image scan  )
-      
+
       - name: Upload backend build artifact
         if: inputs.deployment_type == 'backend'
         uses: actions/upload-artifact@v4
@@ -147,37 +127,38 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-    
+
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.artifact_name }}
           path: ./build-output
-      
+
+      - name: Debug - List downloaded files
+        run: ls -la ./build-output/
+
       - name: Load Docker image
         if: inputs.deployment_type == 'backend'
         run: |
           docker load --input ./build-output/${{ inputs.app_name }}.tar
-      
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
-        # with:
-        #   credentials_json: ${{ secrets.GCP_CREDENTIALS }}
         with:
           workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
-          gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}                   #added for task2
-      
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
-      
+
       - name: Deploy frontend to Google Cloud Storage
         if: inputs.deployment_type == 'frontend'
         uses: google-github-actions/upload-cloud-storage@v2
         with:
-          path: ./build-output
-          destination: ${{ secrets.GCS_BUCKET_NAME }}/
-          parent: false
-      
+          path: ./build-output        # contents of dist land here directly after download
+          destination: ${{ secrets.GCS_BUCKET_NAME }}   # no gs:// prefix, no trailing slash
+          parent: false               # don't recreate build-output folder in bucket
+
       - name: Configure GCS bucket for static website
         if: inputs.deployment_type == 'frontend'
         run: |
@@ -188,36 +169,26 @@ jobs:
           gcloud storage buckets add-iam-policy-binding gs://${{ secrets.GCS_BUCKET_NAME }} \
             --member=allUsers \
             --role=roles/storage.objectViewer
-      
-      # - name: Set up Docker for Artifact Registry
-      #   if: inputs.deployment_type == 'backend'
-      #   uses: docker/login-action@v3
-      #   with:
-      #     registry: asia-south1-docker.pkg.dev
-      #     # username: _json_key
-      #     # password: ${{ secrets.GCP_CREDENTIALS }}
 
-
-      #added for task2 set up docker for artifact registry
       - name: Authenticate Docker to Artifact Registry (WIF)
         if: inputs.deployment_type == 'backend'
         run: |
           gcloud auth configure-docker asia-south1-docker.pkg.dev
-          
+
       - name: Build & Push Docker image
         if: inputs.deployment_type == 'backend'
         uses: docker/build-push-action@v5
         with:
           context: ${{ inputs.app_path }}
-          tags: asia-south1-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{inputs.artifact_repo}}/${{ inputs.app_name }}:${{ github.sha }}
+          tags: asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ inputs.artifact_repo }}/${{ inputs.app_name }}:${{ github.sha }}
           push: true
-      
+
       - name: Deploy to Cloud Run
         if: inputs.deployment_type == 'backend'
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: ${{ inputs.app_name }}
-          image: asia-south1-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{inputs.artifact_repo}}/${{ inputs.app_name }}:${{ github.sha }}
+          image: asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ inputs.artifact_repo }}/${{ inputs.app_name }}:${{ github.sha }}
           region: ${{ inputs.region }}
           platform: managed
           allow-unauthenticated: true
