@@ -38,7 +38,6 @@ on:
 permissions:
   contents: read
   id-token: write
-  security-events: write  # needed for SARIF upload to GitHub Security tab
 
 concurrency:
   group: deploy-${{ inputs.app_name }}-${{ inputs.environment }}
