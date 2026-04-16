@@ -160,7 +160,7 @@ jobs:
         #   credentials_json: ${{ secrets.GCP_CREDENTIALS }}
         with:
           workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}                   #added for task2
+          gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}                   #added for task2
       
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
@@ -198,7 +198,6 @@ jobs:
         run: |
           gcloud auth configure-docker asia-south1-docker.pkg.dev
           
-      
       - name: Build & Push Docker image
         if: inputs.deployment_type == 'backend'
         uses: docker/build-push-action@v5
