@@ -27,4 +27,4 @@ jobs:
     secrets:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCS_BUCKET_NAME: ${{ secrets.GCS_BUCKET_NAME }}
-      GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+      # GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
