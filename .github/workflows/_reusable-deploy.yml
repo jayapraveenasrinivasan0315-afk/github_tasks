@@ -174,7 +174,7 @@ jobs:
         if: inputs.deployment_type == 'frontend'
         uses: google-github-actions/upload-cloud-storage@v2
         with:
-          path: ./build-output/dist
+          path: ./build-output
           destination: ${{ secrets.GCS_BUCKET_NAME }}/
           parent: false
       
