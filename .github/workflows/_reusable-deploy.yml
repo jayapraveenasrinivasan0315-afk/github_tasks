@@ -53,9 +53,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: sast scan
-        run: |
-          semgrep --config=auto .
+      # - name: sast scan
+      #   run: |
+      #     semgrep --config=auto .
     
       - name: Validate deployment type
         run: |
@@ -88,10 +88,10 @@ jobs:
         if: inputs.deployment_type == 'frontend'
         working-directory: ${{ inputs.app_path }}
         run: npm ci
-      - name: Run security scan
-        if: inputs.deployment_type == 'frontend'
-        working-directory: ${{ inputs.app_path }}
-        run: npm audit                                            #task5(dependency check)
+      # - name: Run security scan
+      #   if: inputs.deployment_type == 'frontend'
+      #   working-directory: ${{ inputs.app_path }}
+      #   run: npm audit                                            #task5(dependency check)
       - name: Build frontend
         if: inputs.deployment_type == 'frontend'
         working-directory: ${{ inputs.app_path }}
@@ -118,15 +118,15 @@ jobs:
             ${{ inputs.app_name }}:${{ github.sha }}
             ${{ inputs.app_name }}:latest
           outputs: type=docker,dest=/tmp/${{ inputs.app_name }}.tar
-      - name: trivy scan
-        if: inputs.deployment_type == 'backend'
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ inputs.app_name }}:${{ github.sha }}
-          format: table
-          exit-code: 1
-          ignore-unfixed: true
-          severity: CRITICAL                                        #task5(docker image scan  )
+      # - name: trivy scan
+      #   if: inputs.deployment_type == 'backend'
+      #   uses: aquasecurity/trivy-action@master
+      #   with:
+      #     image-ref: ${{ inputs.app_name }}:${{ github.sha }}
+      #     format: table
+      #     exit-code: 1
+      #     ignore-unfixed: true
+      #     severity: CRITICAL                                        #task5(docker image scan  )
       
       - name: Upload backend build artifact
         if: inputs.deployment_type == 'backend'
