@@ -21,6 +21,10 @@ on:
       region:
         default: asia-south1
         type: string
+      artifact_repo:
+        required: false
+        type: string
+        default: backend-repo
     secrets:
       GCP_PROJECT_ID:
         required: true
@@ -204,7 +208,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ${{ inputs.app_path }}
-          tags: asia-south1-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{inputs.ARTIFACT_REPO}}/${{ inputs.app_name }}:${{ github.sha }}
+          tags: asia-south1-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{inputs.artifact_repo}}/${{ inputs.app_name }}:${{ github.sha }}
           push: true
       
       - name: Deploy to Cloud Run
@@ -212,7 +216,7 @@ jobs:
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: ${{ inputs.app_name }}
-          image: asia-south1-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{inputs.ARTIFACT_REPO}}/${{ inputs.app_name }}:${{ github.sha }}
+          image: asia-south1-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{inputs.artifact_repo}}/${{ inputs.app_name }}:${{ github.sha }}
           region: ${{ inputs.region }}
           platform: managed
           allow-unauthenticated: true
