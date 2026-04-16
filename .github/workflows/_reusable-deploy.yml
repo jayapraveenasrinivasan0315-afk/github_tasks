@@ -38,6 +38,7 @@ on:
 permissions:
   contents: read
   id-token: write
+  security-events: write  # needed for SARIF upload to GitHub Security tab
 
 concurrency:
   group: deploy-${{ inputs.app_name }}-${{ inputs.environment }}
@@ -52,6 +53,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # needed for Gitleaks
 
       - name: Validate deployment type
         run: |
@@ -66,6 +69,26 @@ jobs:
             echo "App path not found"
             exit 1
           fi
+
+      # SECRET DETECTION
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # SAST
+      - name: Run Semgrep
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: p/default
+          generateSarif: "1"
+
+      - name: Upload Semgrep SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+          category: sast
 
   build:
     needs: validate
@@ -84,6 +107,12 @@ jobs:
         if: inputs.deployment_type == 'frontend'
         working-directory: ${{ inputs.app_path }}
         run: npm ci
+
+      # DEPENDENCY SCAN (frontend)
+      - name: Run npm audit
+        if: inputs.deployment_type == 'frontend'
+        working-directory: ${{ inputs.app_path }}
+        run: npm audit --audit-level=critical
 
       - name: Build frontend
         if: inputs.deployment_type == 'frontend'
@@ -112,6 +141,25 @@ jobs:
             ${{ inputs.app_name }}:latest
           outputs: type=docker,dest=/tmp/${{ inputs.app_name }}.tar
 
+      # DOCKER IMAGE SCAN (backend) — scan right after build
+      - name: Run Trivy image scan
+        if: inputs.deployment_type == 'backend'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ inputs.app_name }}:${{ github.sha }}
+          format: sarif
+          output: trivy.sarif
+          severity: CRITICAL
+          exit-code: 1
+          ignore-unfixed: true
+
+      - name: Upload Trivy SARIF
+        if: inputs.deployment_type == 'backend' && always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy.sarif
+          category: docker-image-scan
+
       - name: Upload backend build artifact
         if: inputs.deployment_type == 'backend'
         uses: actions/upload-artifact@v4
@@ -134,13 +182,9 @@ jobs:
           name: ${{ inputs.artifact_name }}
           path: ./build-output
 
-      - name: Debug - List downloaded files
-        run: ls -la ./build-output/
-
       - name: Load Docker image
         if: inputs.deployment_type == 'backend'
-        run: |
-          docker load --input ./build-output/${{ inputs.app_name }}.tar
+        run: docker load --input ./build-output/${{ inputs.app_name }}.tar
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -155,9 +199,9 @@ jobs:
         if: inputs.deployment_type == 'frontend'
         uses: google-github-actions/upload-cloud-storage@v2
         with:
-          path: ./build-output        # contents of dist land here directly after download
-          destination: ${{ secrets.GCS_BUCKET_NAME }}   # no gs:// prefix, no trailing slash
-          parent: false               # don't recreate build-output folder in bucket
+          path: ./build-output
+          destination: ${{ secrets.GCS_BUCKET_NAME }}
+          parent: false
 
       - name: Configure GCS bucket for static website
         if: inputs.deployment_type == 'frontend'
@@ -172,8 +216,7 @@ jobs:
 
       - name: Authenticate Docker to Artifact Registry (WIF)
         if: inputs.deployment_type == 'backend'
-        run: |
-          gcloud auth configure-docker asia-south1-docker.pkg.dev
+        run: gcloud auth configure-docker asia-south1-docker.pkg.dev
 
       - name: Build & Push Docker image
         if: inputs.deployment_type == 'backend'
