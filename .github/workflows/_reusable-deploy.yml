@@ -31,7 +31,7 @@ on:
       # GCP_CREDENTIALS:
       #   required: false
       GCS_BUCKET_NAME:
-        required: false
+        required: true
       #added for task2
       GCP_SERVICE_ACCOUNT:
         required: true
