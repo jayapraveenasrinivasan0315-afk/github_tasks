@@ -25,4 +25,6 @@ jobs:
 
     secrets:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
       # GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
