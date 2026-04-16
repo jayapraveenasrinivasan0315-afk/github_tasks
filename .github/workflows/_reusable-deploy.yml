@@ -56,15 +56,19 @@ jobs:
           fetch-depth: 0  # needed for Gitleaks
 
       - name: Validate deployment type
+        env:
+          DEPLOYMENT_TYPE: ${{ inputs.deployment_type }}
         run: |
-          if [ "${{ inputs.deployment_type }}" != "frontend" ] && [ "${{ inputs.deployment_type }}" != "backend" ]; then
+          if [ "$DEPLOYMENT_TYPE" != "frontend" ] && [ "$DEPLOYMENT_TYPE" != "backend" ]; then
             echo "Invalid deployment type"
             exit 1
           fi
 
       - name: Validate app path
+        env:
+          APP_PATH: ${{ inputs.app_path }}
         run: |
-          if [ ! -d "${{ inputs.app_path }}" ]; then
+          if [ ! -d "$APP_PATH" ]; then
             echo "App path not found"
             exit 1
           fi
@@ -84,10 +88,11 @@ jobs:
 
       - name: Upload Semgrep SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: semgrep.sarif
           category: sast
+        continue-on-error: true
 
   build:
     needs: validate
@@ -154,10 +159,11 @@ jobs:
 
       - name: Upload Trivy SARIF
         if: inputs.deployment_type == 'backend' && always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy.sarif
           category: docker-image-scan
+        continue-on-error: true
 
       - name: Upload backend build artifact
         if: inputs.deployment_type == 'backend'
@@ -183,7 +189,9 @@ jobs:
 
       - name: Load Docker image
         if: inputs.deployment_type == 'backend'
-        run: docker load --input ./build-output/${{ inputs.app_name }}.tar
+        env:
+          APP_NAME: ${{ inputs.app_name }}
+        run: docker load --input ./build-output/$APP_NAME.tar
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
