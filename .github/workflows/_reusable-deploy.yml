@@ -27,12 +27,10 @@ on:
         default: backend-repo
       GCS_BUCKET_NAME:
         required: false
-        type: string 
+        type: string
     secrets:
       GCP_PROJECT_ID:
         required: true
-      # GCS_BUCKET_NAME:
-      #   required: true
       GCP_SERVICE_ACCOUNT:
         required: true
       WORKLOAD_IDENTITY_PROVIDER:
@@ -126,7 +124,6 @@ jobs:
           VITE_BASE_PATH: https://storage.googleapis.com/${{ inputs.GCS_BUCKET_NAME }}/
         run: npm run build
 
-      # Confirm dist/ output before uploading artifact
       - name: Debug dist output
         if: inputs.deployment_type == 'frontend'
         run: find ${{ inputs.app_path }}/dist -type f | sort
@@ -139,11 +136,11 @@ jobs:
           path: ${{ inputs.app_path }}/dist
           retention-days: 1
 
+      # FIX 1: Removed 'driver: docker-container' so the image is built
+      # directly into the host Docker daemon (making it available to docker images)
       - name: Set up Docker Buildx
         if: inputs.deployment_type == 'backend'
         uses: docker/setup-buildx-action@v3
-        with:
-          driver: docker-container
 
       - name: Build and export backend Docker image
         if: inputs.deployment_type == 'backend'
@@ -156,11 +153,18 @@ jobs:
           load: true
           push: false
           outputs: type=docker,dest=/tmp/${{ inputs.app_name }}.tar
-      
-      - name: verify image loaded
+
+      # FIX 2: Explicitly load the exported tar into the Docker daemon
+      # before verifying, ensuring the image is available for grep and Trivy
+      - name: Load Docker image from tar
+        if: inputs.deployment_type == 'backend'
+        env:
+          APP_NAME: ${{ inputs.app_name }}
+        run: docker load --input /tmp/$APP_NAME.tar
+
+      - name: Verify image loaded
         if: inputs.deployment_type == 'backend'
         run: docker images | grep ${{ inputs.app_name }}
-      
 
       - name: Run Trivy image scan
         if: inputs.deployment_type == 'backend'
@@ -203,7 +207,6 @@ jobs:
           name: ${{ inputs.artifact_name }}
           path: ./build-output
 
-      # Confirm exact structure after download
       - name: Debug build output
         if: inputs.deployment_type == 'frontend'
         run: find ./build-output -type f | sort
@@ -223,13 +226,11 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      # Upload using gsutil to guarantee flat structure at bucket root
       - name: Deploy frontend to Google Cloud Storage
         if: inputs.deployment_type == 'frontend'
         run: |
           gsutil -m cp -r ./build-output/* gs://${{ inputs.GCS_BUCKET_NAME }}/
 
-      # Verify what was uploaded to GCS
       - name: Verify GCS upload
         if: inputs.deployment_type == 'frontend'
         run: |
