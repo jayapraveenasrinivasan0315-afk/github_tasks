@@ -156,11 +156,15 @@ jobs:
           load: true
           push: false
           outputs: type=docker,dest=/tmp/${{ inputs.app_name }}.tar
+<<<<<<< HEAD
       
       - name: verify image loaded
         if: inputs.deployment_type == 'backend'
         run: docker images | grep ${{ inputs.app_name }}
       
+=======
+
+>>>>>>> parent of 051fc9b (backend deploy added load docker image and upload sarif change)
       - name: Run Trivy image scan
         if: inputs.deployment_type == 'backend'
         uses: aquasecurity/trivy-action@master
@@ -173,7 +177,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Upload Trivy SARIF
-        if: always() && inputs.deployment_type == 'backend' 
+        if: inputs.deployment_type == 'backend' && always()
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy.sarif
