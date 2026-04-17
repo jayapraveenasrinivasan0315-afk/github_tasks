@@ -142,6 +142,8 @@ jobs:
       - name: Set up Docker Buildx
         if: inputs.deployment_type == 'backend'
         uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker
 
       - name: Build and export backend Docker image
         if: inputs.deployment_type == 'backend'
@@ -151,12 +153,14 @@ jobs:
           tags: |
             ${{ inputs.app_name }}:${{ github.sha }}
             ${{ inputs.app_name }}:latest
+          load: true
+          push: false
           outputs: type=docker,dest=/tmp/${{ inputs.app_name }}.tar
       
-      - name: Load Docker image for scanning
+      - name: verify image loaded
         if: inputs.deployment_type == 'backend'
-        run: docker load --input /tmp/${{ inputs.app_name }}.tar
-
+        run: docker images | grep ${{ inputs.app_name }}
+      
       - name: Run Trivy image scan
         if: inputs.deployment_type == 'backend'
         uses: aquasecurity/trivy-action@master
