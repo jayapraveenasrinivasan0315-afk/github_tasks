@@ -3,7 +3,7 @@ provider "google" {
   region  = var.region
 }
 resource "google_storage_bucket" "my_bucket" {
-  name     = "my-bucket"
+  name     = var.bucket_name
   location = var.region
 }
 resource "google_cloud_run_v2_service" "default" {

@@ -54,7 +54,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # needed for Gitleaks
+          fetch-depth: 0
 
       - name: Validate deployment type
         env:
@@ -74,13 +74,11 @@ jobs:
             exit 1
           fi
 
-      # SECRET DETECTION
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # SAST
       - name: Run Semgrep
         run: |
           pip install semgrep
@@ -113,7 +111,6 @@ jobs:
         working-directory: ${{ inputs.app_path }}
         run: npm ci
 
-      # DEPENDENCY SCAN (frontend)
       - name: Run npm audit
         if: inputs.deployment_type == 'frontend'
         working-directory: ${{ inputs.app_path }}
@@ -123,6 +120,11 @@ jobs:
         if: inputs.deployment_type == 'frontend'
         working-directory: ${{ inputs.app_path }}
         run: npm run build
+
+      # Confirm dist/ output before uploading artifact
+      - name: Debug dist output
+        if: inputs.deployment_type == 'frontend'
+        run: find ${{ inputs.app_path }}/dist -type f | sort
 
       - name: Upload frontend build artifact
         if: inputs.deployment_type == 'frontend'
@@ -146,7 +148,6 @@ jobs:
             ${{ inputs.app_name }}:latest
           outputs: type=docker,dest=/tmp/${{ inputs.app_name }}.tar
 
-      # DOCKER IMAGE SCAN (backend) — scan right after build
       - name: Run Trivy image scan
         if: inputs.deployment_type == 'backend'
         uses: aquasecurity/trivy-action@master
@@ -188,6 +189,11 @@ jobs:
           name: ${{ inputs.artifact_name }}
           path: ./build-output
 
+      # Confirm exact structure after download
+      - name: Debug build output
+        if: inputs.deployment_type == 'frontend'
+        run: find ./build-output -type f | sort
+
       - name: Load Docker image
         if: inputs.deployment_type == 'backend'
         env:
@@ -203,24 +209,18 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
+      # Upload using gsutil to guarantee flat structure at bucket root
       - name: Deploy frontend to Google Cloud Storage
         if: inputs.deployment_type == 'frontend'
-        uses: google-github-actions/upload-cloud-storage@v2
-        with:
-          path: ./build-output
-          destination: ${{ secrets.GCS_BUCKET_NAME }}
-          parent: false
+        run: |
+          gsutil -m cp -r ./build-output/* gs://${{ secrets.GCS_BUCKET_NAME }}/
 
-      - name: Configure GCS bucket for static website
+      # Verify what was uploaded to GCS
+      - name: Verify GCS upload
         if: inputs.deployment_type == 'frontend'
         run: |
-          gcloud storage buckets update gs://${{ secrets.GCS_BUCKET_NAME }} \
-            --web-main-page-suffix=index.html \
-            --web-error-page=404.html
-
-          gcloud storage buckets add-iam-policy-binding gs://${{ secrets.GCS_BUCKET_NAME }} \
-            --member=allUsers \
-            --role=roles/storage.objectViewer
+          echo "Files in GCS bucket:"
+          gsutil ls -r gs://${{ secrets.GCS_BUCKET_NAME }}/
 
       - name: Authenticate Docker to Artifact Registry (WIF)
         if: inputs.deployment_type == 'backend'
