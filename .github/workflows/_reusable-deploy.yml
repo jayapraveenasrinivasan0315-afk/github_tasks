@@ -119,6 +119,8 @@ jobs:
       - name: Build frontend
         if: inputs.deployment_type == 'frontend'
         working-directory: ${{ inputs.app_path }}
+        env:
+          VITE_BASE_PATH: https://storage.googleapis.com/${{ secrets.GCS_BUCKET_NAME }}/
         run: npm run build
 
       # Confirm dist/ output before uploading artifact
