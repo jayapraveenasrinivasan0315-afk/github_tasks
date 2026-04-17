@@ -152,6 +152,10 @@ jobs:
             ${{ inputs.app_name }}:${{ github.sha }}
             ${{ inputs.app_name }}:latest
           outputs: type=docker,dest=/tmp/${{ inputs.app_name }}.tar
+      
+      - name: Load Docker image for scanning
+        if: inputs.deployment_type == 'backend'
+        run: docker load --input /tmp/${{ inputs.app_name }}.tar
 
       - name: Run Trivy image scan
         if: inputs.deployment_type == 'backend'
@@ -165,7 +169,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Upload Trivy SARIF
-        if: inputs.deployment_type == 'backend' && always()
+        if: always() && inputs.deployment_type == 'backend' 
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy.sarif
