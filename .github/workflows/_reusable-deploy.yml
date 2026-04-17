@@ -25,11 +25,14 @@ on:
         required: false
         type: string
         default: backend-repo
+      GCS_BUCKET_NAME:
+        required: false
+        type: string
     secrets:
       GCP_PROJECT_ID:
         required: true
-      GCS_BUCKET_NAME:
-        required: true
+      # GCS_BUCKET_NAME:
+      #   required: true
       GCP_SERVICE_ACCOUNT:
         required: true
       WORKLOAD_IDENTITY_PROVIDER:
@@ -120,7 +123,7 @@ jobs:
         if: inputs.deployment_type == 'frontend'
         working-directory: ${{ inputs.app_path }}
         env:
-          VITE_BASE_PATH: https://storage.googleapis.com/${{ secrets.GCS_BUCKET_NAME }}/
+          VITE_BASE_PATH: https://storage.googleapis.com/${{ inputs.GCS_BUCKET_NAME }}/
         run: npm run build
 
       # Confirm dist/ output before uploading artifact
@@ -215,14 +218,14 @@ jobs:
       - name: Deploy frontend to Google Cloud Storage
         if: inputs.deployment_type == 'frontend'
         run: |
-          gsutil -m cp -r ./build-output/* gs://${{ secrets.GCS_BUCKET_NAME }}/
+          gsutil -m cp -r ./build-output/* gs://${{ inputs.GCS_BUCKET_NAME }}/
 
       # Verify what was uploaded to GCS
       - name: Verify GCS upload
         if: inputs.deployment_type == 'frontend'
         run: |
           echo "Files in GCS bucket:"
-          gsutil ls -r gs://${{ secrets.GCS_BUCKET_NAME }}/
+          gsutil ls -r gs://${{ inputs.GCS_BUCKET_NAME }}/
 
       - name: Authenticate Docker to Artifact Registry (WIF)
         if: inputs.deployment_type == 'backend'

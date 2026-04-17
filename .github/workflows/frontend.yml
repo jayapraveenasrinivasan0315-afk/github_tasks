@@ -24,10 +24,10 @@ jobs:
       app_name: frontend-app
       artifact_name: frontend-build
       region: asia-south1
+      GCS_BUCKET_NAME: frontend-123
 
     secrets:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-      GCS_BUCKET_NAME: ${{ secrets.GCS_BUCKET_NAME }}
       WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
       GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
       # GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
