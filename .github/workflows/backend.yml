@@ -32,3 +32,5 @@ jobs:
       GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
       # GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
       MONGODB_URL: ${{ secrets.MONGODB_URL }}
+      FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+      
