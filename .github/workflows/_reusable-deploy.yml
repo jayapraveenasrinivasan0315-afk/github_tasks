@@ -37,8 +37,6 @@ on:
         required: true
       MONGODB_URI:              # ✅ NEW — MongoDB connection string
         required: false
-      MONGODB_URI:              # ✅ NEW — MongoDB connection string
-        required: false
 
 permissions:
   contents: read
