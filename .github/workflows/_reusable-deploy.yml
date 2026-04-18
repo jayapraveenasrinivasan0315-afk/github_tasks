@@ -208,7 +208,7 @@ jobs:
 
       - name: Install pymongo and test connection
         env:
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_URI: ${{ secrets.MONGODB_URL }}
         run: |
           pip install pymongo --quiet
           python3 - <<'EOF'
