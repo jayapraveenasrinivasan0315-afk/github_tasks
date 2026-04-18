@@ -35,7 +35,7 @@ on:
         required: true
       WORKLOAD_IDENTITY_PROVIDER:
         required: true
-      MONGODB_URI:
+      MONGODB_URL:
         required: false
 
 permissions:
