@@ -201,10 +201,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    if: |
-      always() &&
-      needs.build.result == 'success' &&
-      (needs.validate-mongodb.result == 'success' || needs.validate-mongodb.result == 'skipped')
+    if: inputs.deployment_type == 'backend'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -237,6 +234,10 @@ jobs:
     needs: [build, validate-mongodb]
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    if: |
+      always() &&
+      needs.build.result == 'success' &&
+      (needs.validate-mongodb.result == 'success' || needs.validate-mongodb.result == 'skipped')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
