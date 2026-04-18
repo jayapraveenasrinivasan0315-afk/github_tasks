@@ -9,16 +9,16 @@ import os
 load_dotenv()
 
 # ── Config ────────────────────────────────────────────────────────────────
-MONGODB_URL   = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+MONGODB_URL   = os.getenv("MONGODB_URL", "mongodb+srv://gw-my-app-db:030615@cluster0.7szitnp.mongodb.net/myapp?appName=Cluster0")
 DB_NAME       = os.getenv("DB_NAME", "myapp")
-FRONTEND_URL  = os.getenv("FRONTEND_URL", "http://localhost:5174")
+FRONTEND_URL  = os.getenv("FRONTEND_URL", "http://localhost:5500")
 
 # ── FastAPI app ───────────────────────────────────────────────────────────
 app = FastAPI(title="Names API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.getenv("FRONTEND_URL", "http://localhost:5174")],
+    allow_origins=[os.getenv("FRONTEND_URL", "http://localhost:5500")],
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
@@ -27,9 +27,15 @@ app.add_middleware(
 # ── MongoDB connection ─────────────────────────────────────────────────────
 @app.on_event("startup")
 async def startup():
-    app.mongodb_client = AsyncIOMotorClient(MONGODB_URL)
-    app.db = app.mongodb_client[DB_NAME]
-    print(f"Connected to MongoDB — database: {DB_NAME}")
+    try:
+        app.mongodb_client = AsyncIOMotorClient(MONGODB_URL)
+        # Test the connection
+        app.mongodb_client.admin.command('ping')
+        app.db = app.mongodb_client[DB_NAME]
+        print(f"Connected to MongoDB — database: {DB_NAME}")
+    except Exception as e:
+        print(f"MongoDB connection failed: {e}")
+        raise
 
 @app.on_event("shutdown")
 async def shutdown():
