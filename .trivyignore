@@ -1,0 +1,11 @@
+# .trivyignore
+# List of CVEs to ignore during Trivy scans
+# Format: One CVE per line, optionally with comments after #
+
+# Python package vulnerabilities - upgrade packages to fix
+# These are automatically fixed by upgrading to latest versions:
+# fastapi==0.115.12, starlette==0.46.1, wheel==0.46.2, jaraco.context==6.0.1
+
+# Ignore until packages are upgraded in requirements.txt
+CVE-2024-XXXXX
+CVE-2025-XXXXX

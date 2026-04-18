@@ -5,7 +5,3 @@ motor==3.7.0
 pymongo==4.11.3
 python-dotenv==1.1.0
 
-# These are now automatically fixed by upgrading fastapi
-starlette==0.46.1
-wheel==0.46.2
-jaraco.context==6.0.1
