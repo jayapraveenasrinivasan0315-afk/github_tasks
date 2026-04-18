@@ -18,8 +18,11 @@ app = FastAPI(title="Names API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.getenv("FRONTEND_URL", "http://localhost:5500"),
-    "https://storage.googleapis.com/frontend-123/index.html",
+    allow_origins=[
+        os.getenv("FRONTEND_URL", "http://localhost:5500"),
+        "https://storage.googleapis.com/frontend-123/index.html",
+        "http://localhost:5173",  # Vite dev server
+        "https://storage.googleapis.com",  # All GCS URLs
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST"],
