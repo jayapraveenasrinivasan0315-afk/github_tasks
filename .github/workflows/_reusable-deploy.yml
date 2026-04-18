@@ -39,6 +39,8 @@ on:
         required: false
       API_BASE_URL:
         required: false
+      FRONTEND_URL:
+        required: false
 
 permissions:
   contents: read
@@ -296,3 +298,4 @@ jobs:
           env_vars: |
             MONGODB_URL=${{ secrets.MONGODB_URL }}
             DB_NAME=myapp
+            FRONTEND_URL=${{ secrets.FRONTEND_URL }}
