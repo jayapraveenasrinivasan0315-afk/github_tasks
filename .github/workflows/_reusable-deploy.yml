@@ -293,5 +293,5 @@ jobs:
           platform: managed
           allow-unauthenticated: true
           env_vars: |
-            MONGODB_URL=${{ secrets.MONGODB_URI }}
+            MONGODB_URL=${{ secrets.MONGODB_URL }}
             DB_NAME=myapp
