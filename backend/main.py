@@ -28,19 +28,26 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup():
     try:
-        app.mongodb_client = AsyncIOMotorClient(MONGODB_URL)
-        # Test the connection
+        app.mongodb_client = AsyncIOMotorClient(
+            MONGODB_URL,
+            serverSelectionTimeoutMS=5000,   # ✅ fail fast, don't hang
+            tls=True,
+            tlsAllowInvalidCertificates=False
+        )
         await app.mongodb_client.admin.command('ping')
         app.db = app.mongodb_client[DB_NAME]
-        print(f"Connected to MongoDB — database: {DB_NAME}")
+        print(f"✅ Connected to MongoDB: {DB_NAME}")
     except Exception as e:
-        print(f"MongoDB connection failed: {e}")
-        raise
+        print(f"⚠️ MongoDB connection failed: {e}")
+        # ✅ Don't raise — let app start anyway
+        # Routes will return 503 if DB is unavailable
+        app.db = None
 
 @app.on_event("shutdown")
 async def shutdown():
-    app.mongodb_client.close()
-    print("MongoDB connection closed.")
+    if hasattr(app, 'mongodb_client'):
+        app.mongodb_client.close()
+        print("MongoDB connection closed.")
 
 # ── Schemas ───────────────────────────────────────────────────────────────
 class NameIn(BaseModel):
