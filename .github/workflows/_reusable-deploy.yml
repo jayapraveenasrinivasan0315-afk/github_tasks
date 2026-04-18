@@ -290,8 +290,6 @@ jobs:
           service: ${{ inputs.app_name }}
           image: asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ inputs.artifact_repo }}/${{ inputs.app_name }}:${{ github.sha }}
           region: ${{ inputs.region }}
-          platform: managed
-          allow-unauthenticated: true
           env_vars: |
             MONGODB_URL=${{ secrets.MONGODB_URL }}
             DB_NAME=myapp

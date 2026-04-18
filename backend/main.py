@@ -24,7 +24,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── MongoDB connection ─────────────────────────────────────────────────────
+# ── MongoDB connection ────────────────────────────────────────────────────
 @app.on_event("startup")
 async def startup():
     try:
