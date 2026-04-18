@@ -3,3 +3,15 @@ uvicorn[standard]==0.30.1
 motor==3.4.0
 pymongo==4.7.2
 python-dotenv==1.0.1
+
+# Fix wheel vulnerability (upgrade to 0.45.2+)
+wheel>=0.45.2
+
+# Fix starlette DoS (upgrade to 0.40.0+)
+starlette>=0.40.0
+
+# Fix jaraco.context (upgrade to 6.0.0+)
+jaraco.context>=6.0.0
+
+# If you use fastapi, update it too (it bundles starlette)
+fastapi>=0.115.0
