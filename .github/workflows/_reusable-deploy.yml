@@ -37,6 +37,8 @@ on:
         required: true
       MONGODB_URL:
         required: false
+      API_BASE_URL:
+        required: false
 
 permissions:
   contents: read
@@ -124,6 +126,7 @@ jobs:
         working-directory: ${{ inputs.app_path }}
         env:
           VITE_BASE_PATH: https://storage.googleapis.com/${{ inputs.GCS_BUCKET_NAME }}/
+          VITE_API_BASE_URL: ${{ secrets.API_BASE_URL }}
         run: npm run build
 
       - name: Debug dist output
