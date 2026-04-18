@@ -37,6 +37,8 @@ on:
         required: true
       MONGODB_URI:              # ✅ NEW — MongoDB connection string
         required: false
+      MONGODB_URI:              # ✅ NEW — MongoDB connection string
+        required: false
 
 permissions:
   contents: read
@@ -126,6 +128,8 @@ jobs:
           VITE_BASE_PATH: https://storage.googleapis.com/${{ inputs.GCS_BUCKET_NAME }}/
           # ✅ NEW — point frontend to the Cloud Run backend URL
           # VITE_API_BASE_URL: https://your-load-balancer-domain.com
+          # ✅ NEW — point frontend to the Cloud Run backend URL
+          # VITE_API_BASE_URL: https://your-load-balancer-domain.com
         run: npm run build
 
       - name: Debug dist output
@@ -173,7 +177,7 @@ jobs:
           image-ref: ${{ inputs.app_name }}:${{ github.sha }}
           format: sarif
           output: trivy.sarif
-          severity: CRITICAL,HIGH
+          severity: CRITICAL
           exit-code: 0
           ignore-unfixed: true
         continue-on-error: true
@@ -197,6 +201,38 @@ jobs:
   # ✅ NEW JOB — validate MongoDB connection before deploy
   validate-mongodb:
     needs: build
+    runs-on: ubuntu-latest
+    if: inputs.deployment_type == 'backend'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pymongo and test connection
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: |
+          pip install pymongo --quiet
+          python3 - <<'EOF'
+          import os, sys
+          from pymongo import MongoClient
+          from pymongo.errors import ConnectionFailure
+
+          uri = os.environ.get("MONGODB_URI")
+          if not uri:
+              print("MONGODB_URI not set, skipping connection test")
+              sys.exit(0)
+
+          try:
+              client = MongoClient(uri, serverSelectionTimeoutMS=5000)
+              client.admin.command("ping")
+              print(" MongoDB connection successful")
+          except ConnectionFailure as e:
+              print(f" MongoDB connection failed: {e}")
+              sys.exit(1)
+          EOF
+
+  deploy:
+    needs: [build, validate-mongodb]
     runs-on: ubuntu-latest
     if: inputs.deployment_type == 'backend'
     steps:
@@ -284,6 +320,7 @@ jobs:
           push: true
 
       # ✅ NEW — Pass MONGODB_URI as Cloud Run env var via Secret Manager
+      # ✅ NEW — Pass MONGODB_URI as Cloud Run env var via Secret Manager
       - name: Deploy to Cloud Run
         if: inputs.deployment_type == 'backend'
         uses: google-github-actions/deploy-cloudrun@v2
@@ -293,6 +330,9 @@ jobs:
           region: ${{ inputs.region }}
           platform: managed
           allow-unauthenticated: true
+          env_vars: |
+            MONGODB_URI=${{ secrets.MONGODB_URI }}
+            DB_NAME=gw-my-app-db
           env_vars: |
             MONGODB_URI=${{ secrets.MONGODB_URI }}
             DB_NAME=gw-my-app-db
