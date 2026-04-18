@@ -200,6 +200,7 @@ jobs:
   validate-mongodb:
     needs: build
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
     if: inputs.deployment_type == 'backend'
     steps:
       - name: Checkout code
