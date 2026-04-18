@@ -256,6 +256,9 @@ jobs:
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
+      
+      - name: Set GCP Project  
+        run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Deploy frontend to Google Cloud Storage
         if: inputs.deployment_type == 'frontend'
