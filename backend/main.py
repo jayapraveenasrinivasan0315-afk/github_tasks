@@ -30,7 +30,7 @@ async def startup():
     try:
         app.mongodb_client = AsyncIOMotorClient(MONGODB_URL)
         # Test the connection
-        app.mongodb_client.admin.command('ping')
+        await app.mongodb_client.admin.command('ping')
         app.db = app.mongodb_client[DB_NAME]
         print(f"Connected to MongoDB — database: {DB_NAME}")
     except Exception as e:
