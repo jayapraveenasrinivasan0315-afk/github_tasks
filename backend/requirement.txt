@@ -12,6 +12,3 @@ starlette>=0.40.0
 
 # Fix jaraco.context (upgrade to 6.0.0+)
 jaraco.context>=6.0.0
-
-# If you use fastapi, update it too (it bundles starlette)
-fastapi>=0.115.0
