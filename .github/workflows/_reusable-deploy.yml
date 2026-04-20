@@ -305,3 +305,4 @@ jobs:
             MONGODB_URL=${{ secrets.MONGODB_URL }}
             DB_NAME=myapp
             FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+            API_BASE_URL=${{ secrets.API_BASE_URL }}
