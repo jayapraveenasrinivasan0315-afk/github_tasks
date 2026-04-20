@@ -131,11 +131,12 @@ jobs:
           VITE_API_BASE_URL: ${{ secrets.API_BASE_URL }}
           NODE_ENV: production
         run: |
-          echo "Building frontend with:"
+          echo "🏗️ Building frontend..."
           echo "  VITE_BASE_PATH: $VITE_BASE_PATH"
+          echo "  VITE_API_BASE_URL: ${VITE_API_BASE_URL:-using fallback from .env.production}"
           echo "  NODE_ENV: $NODE_ENV"
-          echo "  VITE_API_BASE_URL: ${VITE_API_BASE_URL:-(using fallback from .env.production)}"
           npm run build
+          echo "✅ Frontend build complete"
 
       - name: Debug dist output
         if: inputs.deployment_type == 'frontend'
