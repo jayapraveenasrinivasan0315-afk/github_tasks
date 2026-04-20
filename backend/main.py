@@ -16,7 +16,9 @@ BACKEND_URL   = os.getenv("BACKEND_URL", "https://backend-app-451325681713.asia-
 
 # ── FastAPI app ───────────────────────────────────────────────────────────
 app = FastAPI(title="Names API", version="1.0.0")
-
+# Initialize db to None to prevent AttributeError before startup completes
+app.db = None
+app.mongodb_client = None
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
