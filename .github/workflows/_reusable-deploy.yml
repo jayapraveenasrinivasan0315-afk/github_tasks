@@ -38,9 +38,9 @@ on:
       MONGODB_URL:
         required: false
       API_BASE_URL:
-        required: true
+        required: false
       FRONTEND_URL:
-        required: true
+        required: false
 
 permissions:
   contents: read
@@ -129,8 +129,12 @@ jobs:
         env:
           VITE_BASE_PATH: https://storage.googleapis.com/${{ inputs.GCS_BUCKET_NAME }}/
           VITE_API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          NODE_ENV: production
         run: |
-          echo "Building with backend URL: $VITE_API_BASE_URL"
+          echo "Building frontend with:"
+          echo "  VITE_BASE_PATH: $VITE_BASE_PATH"
+          echo "  NODE_ENV: $NODE_ENV"
+          echo "  VITE_API_BASE_URL: ${VITE_API_BASE_URL:-(using fallback from .env.production)}"
           npm run build
 
       - name: Debug dist output

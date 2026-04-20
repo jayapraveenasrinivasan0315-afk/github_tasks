@@ -31,5 +31,3 @@ jobs:
       WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
       GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
       API_BASE_URL: ${{ secrets.API_BASE_URL }}
-      FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
-      # GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
