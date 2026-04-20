@@ -212,7 +212,7 @@ jobs:
         with:
            name: trivy-summary
            path: trivy-summary.txt
-        retention-days: 2
+           retention-days: 2
         continue-on-error: true
 
       - name: Upload backend build artifact
