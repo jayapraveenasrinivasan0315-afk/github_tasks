@@ -23,9 +23,7 @@ app.add_middleware(
         "https://storage.googleapis.com",  # Production GCS frontend
         "http://localhost:5173",  # Vite dev server
         "http://localhost:3000",   # Alternative local dev
-        "http://localhost:5500",
-        "https://backend-app-451325681713.asia-south1.run.app/",
-        "https://storage.googleapis.com/frontend-123/index.html" # Alternative local dev
+        "http://localhost:5500",   # Alternative local dev
     ],
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods (GET, POST, OPTIONS, etc.)
@@ -35,7 +33,9 @@ app.add_middleware(
 # ── MongoDB connection ────────────────────────────────────────────────────
 @app.on_event("startup")
 async def startup():
+    print(f"🚀 Starting FastAPI app on port 8080...")
     try:
+        print(f"📡 Connecting to MongoDB at: {MONGODB_URL[:50]}...")
         app.mongodb_client = AsyncIOMotorClient(
             MONGODB_URL,
             serverSelectionTimeoutMS=5000,   # ✅ fail fast, don't hang
@@ -47,15 +47,15 @@ async def startup():
         print(f"✅ Connected to MongoDB: {DB_NAME}")
     except Exception as e:
         print(f"⚠️ MongoDB connection failed: {e}")
-        # ✅ Don't raise — let app start anyway
-        # Routes will return 503 if DB is unavailable
+        print(f"⚠️ App will continue without database. Routes will return 503.")
         app.db = None
 
 @app.on_event("shutdown")
 async def shutdown():
+    print("🛑 Shutting down...")
     if hasattr(app, 'mongodb_client'):
         app.mongodb_client.close()
-        print("MongoDB connection closed.")
+        print("✅ MongoDB connection closed.")
 
 # ── Schemas ───────────────────────────────────────────────────────────────
 class NameIn(BaseModel):
