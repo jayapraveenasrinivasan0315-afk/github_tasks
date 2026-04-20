@@ -12,7 +12,7 @@ load_dotenv()
 MONGODB_URL   = os.getenv("MONGODB_URL", "mongodb+srv://gw-my-app-db:030615@cluster0.7szitnp.mongodb.net/myapp?appName=Cluster0")
 DB_NAME       = os.getenv("DB_NAME", "myapp")
 FRONTEND_URL  = os.getenv("FRONTEND_URL", "https://storage.googleapis.com/frontend-123")
-BACKEND_URL   = os.getenv("BACKEND_URL", "https://backend-app-451325681713.asia-south1.run.app")
+BACKEND-URL 
 
 # ── FastAPI app ───────────────────────────────────────────────────────────
 app = FastAPI(title="Names API", version="1.0.0")
@@ -23,7 +23,9 @@ app.add_middleware(
         "https://storage.googleapis.com",  # Production GCS frontend
         "http://localhost:5173",  # Vite dev server
         "http://localhost:3000",   # Alternative local dev
-        "http://localhost:5500",   # Alternative local dev
+        "http://localhost:5500",
+        "https://backend-app-451325681713.asia-south1.run.app/",
+        "https://storage.googleapis.com/frontend-123/index.html" # Alternative local dev
     ],
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods (GET, POST, OPTIONS, etc.)
@@ -74,6 +76,9 @@ async def health():
 @app.post("/names", response_model=NameOut, status_code=201)
 async def save_name(payload: NameIn):
     """Save a name to MongoDB with a UTC timestamp."""
+    if not app.db:
+        raise HTTPException(status_code=503, detail="Database unavailable.")
+    
     name = payload.name.strip()
     if not name:
         raise HTTPException(status_code=400, detail="Name cannot be empty.")
@@ -97,6 +102,9 @@ async def save_name(payload: NameIn):
 @app.get("/names", response_model=list[NameOut])
 async def get_names():
     """Return all saved names, oldest first."""
+    if not app.db:
+        raise HTTPException(status_code=503, detail="Database unavailable.")
+    
     cursor = app.db["names"].find().sort("created_at", 1)
     names = []
     async for doc in cursor:
