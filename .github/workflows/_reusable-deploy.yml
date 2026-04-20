@@ -190,10 +190,11 @@ jobs:
 
       - name: Upload Trivy SARIF
         if: inputs.deployment_type == 'backend' && always()
-        uses: github/codeql-action/upload-sarif@v4
+        uses: actions/upload-artifact@v4
         with:
-          sarif_file: trivy.sarif
-          category: docker-image-scan
+          name: trivy-sarif
+          path: trivy.sarif
+          retention-days: 2
         continue-on-error: true
 
       - name: Upload backend build artifact
