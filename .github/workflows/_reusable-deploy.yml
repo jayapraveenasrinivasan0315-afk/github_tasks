@@ -192,9 +192,9 @@ jobs:
         if: inputs.deployment_type == 'backend' && always()
         uses: actions/upload-artifact@v4
         with:
-          name: trivy-sarif
-          path: trivy.sarif
-          retention-days: 2
+           name: trivy-summary
+           path: trivy-summary.txt
+        retention-days: 2
         continue-on-error: true
 
       - name: Upload backend build artifact
