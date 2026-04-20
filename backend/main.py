@@ -11,7 +11,8 @@ load_dotenv()
 # ── Config ────────────────────────────────────────────────────────────────
 MONGODB_URL   = os.getenv("MONGODB_URL", "mongodb+srv://gw-my-app-db:030615@cluster0.7szitnp.mongodb.net/myapp?appName=Cluster0")
 DB_NAME       = os.getenv("DB_NAME", "myapp")
-FRONTEND_URL  = os.getenv("FRONTEND_URL", "http://localhost:5500")
+FRONTEND_URL  = os.getenv("FRONTEND_URL", "https://storage.googleapis.com/frontend-123")
+BACKEND_URL   = os.getenv("BACKEND_URL", "https://backend-app-451325681713.asia-south1.run.app")
 
 # ── FastAPI app ───────────────────────────────────────────────────────────
 app = FastAPI(title="Names API", version="1.0.0")
@@ -19,13 +20,13 @@ app = FastAPI(title="Names API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        os.getenv("FRONTEND_URL", "http://localhost:5500"),
-        "https://storage.googleapis.com/frontend-123/index.html",
+        "https://storage.googleapis.com",  # Production GCS frontend
         "http://localhost:5173",  # Vite dev server
-        "https://storage.googleapis.com",  # All GCS URLs
+        "http://localhost:3000",   # Alternative local dev
+        "http://localhost:5500",   # Alternative local dev
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["*"],  # Allow all methods (GET, POST, OPTIONS, etc.)
     allow_headers=["*"],
 )
 
