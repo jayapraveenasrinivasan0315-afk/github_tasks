@@ -12,7 +12,7 @@ load_dotenv()
 MONGODB_URL   = os.getenv("MONGODB_URL", "mongodb+srv://gw-my-app-db:030615@cluster0.7szitnp.mongodb.net/myapp?appName=Cluster0")
 DB_NAME       = os.getenv("DB_NAME", "myapp")
 FRONTEND_URL  = os.getenv("FRONTEND_URL", "https://storage.googleapis.com/frontend-123")
-BACKEND-URL 
+BACKEND_URL   = os.getenv("BACKEND_URL", "https://backend-app-451325681713.asia-south1.run.app")
 
 # ── FastAPI app ───────────────────────────────────────────────────────────
 app = FastAPI(title="Names API", version="1.0.0")
