@@ -1,7 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 
-// const API_URL = 'http://localhost:8000'
-const API_URL = import.meta.env.VITE_API_BASE_URL
+// API_URL must be set via VITE_API_BASE_URL environment variable
+// Fallback to empty string to prevent calling wrong URL
+const API_URL = import.meta.env.VITE_API_BASE_URL || ''
+
+if (!API_URL) {
+  console.error('ERROR: VITE_API_BASE_URL environment variable not set!')
+}
 
 // ── Utility: format ISO timestamp to readable string ──────────────────────
 function formatDate(isoString) {
