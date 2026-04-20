@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 
-// API_URL must be set via VITE_API_BASE_URL environment variable
+// API_URL must be set via API_BASE_URL environment variable
 // Fallback to empty string to prevent calling wrong URL
-const API_URL = import.meta.env.VITE_API_BASE_URL || ''
+const API_URL = import.meta.env.API_BASE_URL || ''
 
 if (!API_URL) {
-  console.error('ERROR: VITE_API_BASE_URL environment variable not set!')
+  console.error('ERROR: API_BASE_URL environment variable not set!')
 }
 
 // ── Utility: format ISO timestamp to readable string ──────────────────────
