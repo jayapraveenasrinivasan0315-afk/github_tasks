@@ -175,7 +175,7 @@ jobs:
       - name: Verify image loaded
         if: inputs.deployment_type == 'backend'
         run: docker images | grep ${{ inputs.app_name }}
-        
+
       - name: Generate readable Trivy report
         if: inputs.deployment_type == 'backend'
         run: |
@@ -186,7 +186,13 @@ jobs:
           --skip-version-check \
           --format table \
           ${{ inputs.app_name }}:${{ github.sha }} > trivy-report.txt
-
+      - name: Upload Trivy report
+        if: inputs.deployment_type == 'backend'
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: trivy-report.txt
+          retention-days: 2
       - name: Upload backend build artifact
         if: inputs.deployment_type == 'backend'
         uses: actions/upload-artifact@v4
