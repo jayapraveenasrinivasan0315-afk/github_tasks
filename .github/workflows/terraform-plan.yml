@@ -6,17 +6,10 @@ on:
         description: 'Environment to deploy to'
         required: true
         default: 'dev'
-    secret:
-      WORKLOAD_IDENTITY_PROVIDER:
-        description: 'Workload Identity Provider for GCP authentication'
-      GCP_SERVICE_ACCOUNT:
-        description: 'GCP Service Account email for authentication'
-      GCP_PROJECT_ID:
-        description: 'GCP Project ID'
-      GCP_REGION:
-        description: 'GCP Region for resource deployment'
-      GCP_SERVICE_ACCOUNT:
-        description: 'GCP Service Account key (JSON) for authentication'
+permissions:
+  contents: read
+  id-token: write
+  security-events: write
 jobs:
   plan:
     runs-on: ubuntu-latest
