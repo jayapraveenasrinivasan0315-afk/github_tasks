@@ -181,7 +181,7 @@ jobs:
         with:
           image-ref: ${{ inputs.app_name }}:${{ github.sha }}
           format: table
-          output: trivy-report.txt   
+          output: trivy-report.sarif
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           skip-version-check: true
@@ -190,7 +190,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: trivy-report
-          path: trivy-report.txt
+          path: trivy-report.sarif
           retention-days: 2
       - name: Upload backend build artifact
         if: inputs.deployment_type == 'backend'
