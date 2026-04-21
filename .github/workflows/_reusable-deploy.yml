@@ -182,7 +182,7 @@ jobs:
           image-ref: ${{ inputs.app_name }}:${{ github.sha }}
           format: table
           output: trivy-report.txt   
-          severity: CRITICAL
+          severity: HIGH,CRITICAL
           ignore-unfixed: true
           skip-version-check: true
       - name: Upload Trivy report
