@@ -180,7 +180,7 @@ jobs:
         uses: aquasecurity/trivy-action@v0.20.0
         with:
           image-ref: ${{ inputs.app_name }}:${{ github.sha }}
-          format: table
+          format: sarif
           output: trivy-report.sarif
           severity: HIGH,CRITICAL
           ignore-unfixed: true
