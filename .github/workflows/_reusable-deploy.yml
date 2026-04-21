@@ -177,7 +177,7 @@ jobs:
         run: docker images | grep ${{ inputs.app_name }}
       - name: Run Trivy scan (readable report)
         if: inputs.deployment_type == 'backend'
-        uses: aquasecurity/trivy-action@v0.20.0
+        uses: aquasecurity/trivy-action@0.30.0
         with:
           image-ref: ${{ inputs.app_name }}:${{ github.sha }}
           format: sarif
