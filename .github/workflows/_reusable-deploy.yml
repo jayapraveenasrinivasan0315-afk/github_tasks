@@ -175,6 +175,15 @@ jobs:
       - name: Verify image loaded
         if: inputs.deployment_type == 'backend'
         run: docker images | grep ${{ inputs.app_name }}
+      - name: Run Trivy scan
+        if: inputs.deployment_type == 'backend'
+        uses: aquasecurity/trivy-action@v0.4.0
+        with:
+          image-ref: ${{ inputs.app_name }}:${{ github.sha }}
+          format: table
+          severity: CRITICAL
+          ignore-unfixed: true
+          skip-version-check: true
 
       - name: Generate readable Trivy report
         if: inputs.deployment_type == 'backend'
@@ -186,6 +195,7 @@ jobs:
           --skip-version-check \
           --format table \
           ${{ inputs.app_name }}:${{ github.sha }} > trivy-report.txt
+      
       - name: Upload Trivy report
         if: inputs.deployment_type == 'backend'
         uses: actions/upload-artifact@v4
