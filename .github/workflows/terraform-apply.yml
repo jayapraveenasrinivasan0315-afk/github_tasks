@@ -1,17 +1,17 @@
-name: Terraform Apply
-on:
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy to'
-        required: true
-        default: 'dev'
-      plan_run_number:
-        description: 'Run number of the plan to apply (from terraform-plan workflow)'
-        required: true
-        type: string
+  name: Terraform Apply
+  on:
+    workflow_dispatch:
+      inputs:
+        environment:
+          description: 'Environment to deploy to'
+          required: true
+          default: 'dev'
+        plan_run_number:
+          description: 'Run number of the plan to apply (from terraform-plan workflow)'
+          required: true
+          type: string
 
-jobs:
+  jobs:
     apply:
       runs-on: ubuntu-latest
       steps:
@@ -34,17 +34,15 @@ jobs:
             name: tfplan-${{ github.event.inputs.environment }}-${{ github.event.inputs.plan_run_number }}
             github_token: ${{ secrets.GITHUB_TOKEN }}
         - name: Terraform Init
-          working-directory: ./infra
           run: terraform init \
             -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
-            -backend-config="prefix=${{ github.event.inputs.environment }}/terraform"
+            -backend-config="prefix=${{ github.event.inputs.environment }}/terraform.tfstate"
         - name: terraform apply
-          working-directory: ./infra
           run: terraform apply \
             -var="project_id=${{ vars.GCP_PROJECT_ID }}" \
             -var="region=${{ vars.GCP_REGION }}" \
             -var="environment=${{ github.event.inputs.environment }}" \
             -auto-approve \
-            ../tfplan-${{ github.event.inputs.environment }}-${{ github.event.inputs.plan_run_number }}/tfplan
+            tfplan-${{ github.event.inputs.environment }}-${{ github.event.inputs.plan_run_number }}/tfplan.tfplan
         
           

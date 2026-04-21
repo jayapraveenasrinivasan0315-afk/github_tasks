@@ -273,47 +273,6 @@ jobs:
       - name: Set GCP Project  
         run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: latest
-
-      - name: Terraform Init
-        working-directory: ./infra
-        run: |
-          terraform init \
-            -backend-config="bucket=${{ inputs.GCS_BUCKET_NAME }}" \
-            -backend-config="prefix=${{ inputs.environment }}/terraform" \
-            -upgrade
-
-      - name: Terraform Plan
-        working-directory: ./infra
-        env:
-          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
-          TF_VAR_region: ${{ inputs.region }}
-          TF_VAR_bucket_name: ${{ inputs.GCS_BUCKET_NAME }}
-          TF_VAR_image: asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ inputs.artifact_repo }}/${{ inputs.app_name }}:${{ github.sha }}
-        run: |
-          terraform plan \
-            -var-file=../environments/${{ inputs.environment }}/variables.tfvars \
-            -out=tfplan
-
-      - name: Terraform Apply
-        working-directory: ./infra
-        env:
-          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
-          TF_VAR_region: ${{ inputs.region }}
-          TF_VAR_bucket_name: ${{ inputs.GCS_BUCKET_NAME }}
-          TF_VAR_image: asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ inputs.artifact_repo }}/${{ inputs.app_name }}:${{ github.sha }}
-        run: terraform apply -auto-approve tfplan
-
-      - name: Save Terraform State
-        working-directory: ./infra
-        if: always()
-        run: |
-          echo "Terraform state saved to GCS bucket: ${{ inputs.GCS_BUCKET_NAME }}//${{ inputs.environment }}/terraform"
-          terraform state list
-
       - name: Deploy frontend to Google Cloud Storage
         if: inputs.deployment_type == 'frontend'
         run: |
