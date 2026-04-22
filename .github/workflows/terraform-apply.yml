@@ -5,12 +5,15 @@
         environment:
           description: 'Environment to deploy to'
           required: true
-          default: 'dev'
+          default: 'development'
         plan_run_number:
           description: 'Run number of the plan to apply (from terraform-plan workflow)'
           required: true
           type: string
-
+permissions:
+  contents: read
+  id-token: write
+  security-events: write
   jobs:
     apply:
       runs-on: ubuntu-latest
@@ -23,7 +26,7 @@
           uses: google-github-actions/auth@v2
           with:
             workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
-            service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+            service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_01 }}
         - name: Set up Cloud SDK
           uses: google-github-actions/setup-gcloud@v2
         - name: download the plan artifacts
