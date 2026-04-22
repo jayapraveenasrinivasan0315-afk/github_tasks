@@ -36,13 +36,14 @@ jobs:
       - name: terraform validate
         run: terraform validate
         working-directory: ./
-      - name: terraform plan
-        run: terraform plan \
-          -var="project_id=${{ vars.GCP_PROJECT_ID }}" \
-          -var="region=${{ vars.GCP_REGION }}" \
-          -var="environment=${{ github.event.inputs.environment }}" \
-          -var-file=environments/${{ github.event.inputs.environment }}/terraform.tfvars
-          -out=tfplan
+      - name: Terraform Plan
+        id: plan
+        run: |
+         terraform plan \
+           -var-file="environment/dev/terraform.tfvars" \
+           -out=tfplan.binary
+        working-directory: ./
+        continue-on-error: true
       - name: Upload plan artifact
         uses: actions/upload-artifact@v4
         with:
