@@ -40,12 +40,14 @@ jobs:
         - name: Initialize Terraform 
           run: terraform init -backend-config="bucket=${{ secrets.GCP_TF_STATE_BUCKET }}" -backend-config="prefix=terraform/state/dev"
           working-directory: ./
-        - name: terraform apply
-          run: terraform apply \
-            -var="project_id=${{ vars.GCP_PROJECT_ID }}" \
-            -var="region=${{ vars.GCP_REGION }}" \
-            -var="environment=${{ github.event.inputs.environment }}" \
-            -auto-approve \
-            tfplan-${{ github.event.inputs.environment }}-${{ github.event.inputs.plan_run_number }}/tfplan.tfplan
+        - name: Terraform Apply
+          id: apply
+          run: |
+            terraform apply \
+              -auto-approve \
+              -input=false \
+              tfplanc.binary
+          working-directory: ./
+            
         
           
