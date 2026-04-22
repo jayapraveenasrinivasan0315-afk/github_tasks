@@ -1,5 +1,5 @@
-  name: Terraform Apply
-  on:
+name: Terraform Apply
+on:
     workflow_dispatch:
       inputs:
         environment:
@@ -14,7 +14,7 @@ permissions:
   contents: read
   id-token: write
   security-events: write
-  jobs:
+jobs:
     apply:
       runs-on: ubuntu-latest
       steps:
