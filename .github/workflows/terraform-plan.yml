@@ -6,13 +6,10 @@ on:
         description: 'Environment to deploy to'
         required: true
         default: 'dev'
-<<<<<<< HEAD
 permissions:
   contents: read
   id-token: write
   security-events: write
-=======
->>>>>>> parent of 3d0f355 (plan change)
 jobs:
   plan:
     runs-on: ubuntu-latest
@@ -25,9 +22,7 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_01 }}
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
       - name: terraform fmt
