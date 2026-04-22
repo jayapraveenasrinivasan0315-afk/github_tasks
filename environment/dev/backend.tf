@@ -1,3 +1,6 @@
 terraform {
-  backend "gcs" {}
+  backend "gcs" {
+    bucket = ""        # intentionally left empty
+    prefix = "development/terraform.tfstate"
+  }
 }
