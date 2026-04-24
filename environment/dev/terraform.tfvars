@@ -1,5 +1,5 @@
 project_id = "gwx-devops-internship"
-region = "asia-south-1"
+region = "asia-south1"
 image = "gcr.io/google-samples/hello-app:1.0"
 bucket_name = "github-tf-bucket"
 repository_id = "github-repo"
