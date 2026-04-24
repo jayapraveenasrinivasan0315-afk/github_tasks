@@ -30,7 +30,7 @@ jobs:
             service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_01 }}
             project_id: ${{ secrets.GCP_PROJECT_ID }}
             create_credentials_file: true
-          export_environment_variables: true
+            export_environment_variables: true
         - name: Set up Cloud SDK
           uses: google-github-actions/setup-gcloud@v2
         - name: Grant IAM roles to service account
