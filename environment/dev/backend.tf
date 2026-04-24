@@ -1,3 +1,12 @@
 terraform {
-  backend "gcs" {}  # ← leave completely empty, let workflow flags fill it in
+  required_version = ">= 1.3.0"
+
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 5.0"
+    }
+  }
+
+  backend "gcs" {}
 }
