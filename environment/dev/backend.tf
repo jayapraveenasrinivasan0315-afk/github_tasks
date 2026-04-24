@@ -1,6 +1,3 @@
 terraform {
-  backend "gcs" {
-    bucket = ""        # intentionally left empty
-    prefix = "development/terraform.tfstate"
-  }
+  backend "gcs" {}  # ← leave completely empty, let workflow flags fill it in
 }
